@@ -52,7 +52,7 @@ def check_domain_cache(domain):
 
 def export(domain):
     with open("domains.txt", "a") as f:
-        f.write(domain)
+        f.write(domain + '\n')
         f.close()
 
 
