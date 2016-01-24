@@ -1,29 +1,39 @@
 #! env/bin/python
 # coding: utf-8
 import itertools
-import whois
 import json
+import requests
 import sqlite3
 
 CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789'
-TLDS = ('ir', 'com')
+TLDS = ('ir', )
 REPEAT = 3
 
-def main(try_tld=None, try_domain_index=None):
-    if not try_tld or not try_domain_index:
-        create_table()
+def main():
     chains = itertools.product(CHARACTERS, repeat=REPEAT)
     for tld in TLDS:
-        if try_tld and try_tld != tld:
-            continue
-        for counter, chain in enumerate(chains):
-            if try_domain_index and try_domain_index < counter:
-                continue
+        for chain in chains:
             domain = creat_domain(chain, tld)
-            res = whois.whois(domain)
-            if not res['emails']:
-                print 'available domain:  %s' % domain
-                insert_to_db(domain, counter)
+            if check_domain_cache(domain):
+                continue
+            if not validate(domain):
+                continue
+            print 'An available domain has been found : ** %s ** ' % domain
+            export(domain)
+
+
+def validate(domain):
+    if domain.split('.')[1] == 'ir':
+        return validate_ir(domain)
+    return
+
+def validate_ir(domain):
+    url = 'http://whois.nic.ir/WHOIS?name=%s' % domain
+    res = requests.get(url).text
+    check_string = 'ERROR:101:'
+    if check_string not in res:
+        return False
+    return True
 
 def creat_domain(chain, tld):
     response = ''
@@ -32,40 +42,19 @@ def creat_domain(chain, tld):
     response += '.%s' % tld
     return response
 
-
-def create_table():
-    connection = db().cursor()
-    # Create table
-    connection.execute('''CREATE TABLE domains (domain, counter)''')
-    db().close()
-
-def insert_to_db(domain, index):
-    connection = db().cursor()
-    connection.execute("INSERT INTO domains VALUES ('%s', '%s')" % (domain, index))
-    db().commit()
-    db().close()
-
-def select_all():
-    connection = db().cursor()
-    row = connection.execute("SELECT * FROM domains")
-    db().close()
-    return row
-
-def db():
-    connection = sqlite3.connect('domain.db')
-    return connection
-
-def export():
-    available = list()
-    for row in select_all():
-        available.append(row[0])
-
-    with open("domains.json", "a") as f:
-        f.write(json.dumps(available))
+def check_domain_cache(domain):
+    check = False
+    with open("domains.txt", "r") as f:
+        if domain in f:
+            check = True
         f.close()
+    return check
 
+def export(domain):
+    with open("domains.txt", "a") as f:
+        f.write(domain)
+        f.close()
 
 
 if __name__ == '__main__':
     main()
-    export()

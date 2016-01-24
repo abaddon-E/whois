@@ -8,6 +8,7 @@
 *.log
 *.egg-info
 *.sublime-workspace
+*.txt
 run.sublime-workspace
 bfl.sublime-project
 src/pip-*.txt
