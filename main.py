@@ -45,7 +45,7 @@ def creat_domain(chain, tld):
 def check_domain_cache(domain):
     check = False
     with open("domains.txt", "r") as f:
-        if domain in f:
+        if domain in f.read():
             check = True
         f.close()
     return check
