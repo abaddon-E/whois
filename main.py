@@ -29,10 +29,14 @@ def validate(domain):
 
 def validate_ir(domain):
     url = 'http://whois.nic.ir/WHOIS?name=%s' % domain
-    res = requests.get(url).text
+    try:
+        res = requests.get(url).text
+    except Exception:
+        print 'Request Exception has been raised'
+        return
     check_string = 'ERROR:101:'
     if check_string not in res:
-        return False
+        return
     return True
 
 def creat_domain(chain, tld):
